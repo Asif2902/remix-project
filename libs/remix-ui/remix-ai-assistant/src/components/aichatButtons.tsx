@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 interface AiChatButtonsProps {
   theme: string
@@ -84,6 +84,12 @@ export function AiChatButtons({ theme, plugin, sendPrompt, handleGenerateWorkspa
     }
   }
 
+  const handleActionClick = useCallback(() => {
+    if (document.querySelector('[data-id="maximizeRightSidePanel"]')) {
+      plugin.call('rightSidePanel', 'maximizePanel')
+    }
+  }, [])
+
   const btnList: {
     label: string,
     icon: string,
@@ -107,8 +113,8 @@ export function AiChatButtons({ theme, plugin, sendPrompt, handleGenerateWorkspa
       icon: `${theme?.toLowerCase() === 'dark' ? 'text-remix-ai' : 'text-remix-ai-light'} fas fa-magic`,
       color: '',
       action: () => {
+        handleActionClick()
         sendPrompt('Sum up a list of all the MCP endpoints and their functionalities in a concise manner. Propose a few prompts I can use to enhance my workflow.')
-        plugin.call('rightSidePanel', 'maximizePanel')
       }
     },
     {
@@ -116,8 +122,8 @@ export function AiChatButtons({ theme, plugin, sendPrompt, handleGenerateWorkspa
       icon: `${theme?.toLowerCase() === 'dark' ? 'text-remix-ai' : 'text-remix-ai-light'} fas fa-graduation-cap`,
       color: '',
       action: () => {
+        handleActionClick()
         sendPrompt('I would like to learn Web3 development. Can you create a learning path for me with resources and projects to work on?')
-        plugin.call('rightSidePanel', 'maximizePanel')
       }
     },
     {
@@ -127,6 +133,14 @@ export function AiChatButtons({ theme, plugin, sendPrompt, handleGenerateWorkspa
       action: async () => {
         await plugin.call('manager', 'activatePlugin', 'quick-dapp-v2')
         plugin.call('tabs', 'focus', 'quick-dapp-v2')
+      }
+    },
+    {
+      label: 'Load skills',
+      icon: `${theme?.toLowerCase() === 'dark' ? 'text-remix-ai' : 'text-remix-ai-light'} fas fa-cube`,
+      color: '',
+      action: async () => {
+        sendPrompt('List all the skills available and their functionalities. Then, propose a few prompts to use those skills effectively. Ask the user to specify which skill they want to load, and load those skills accordingly.')
       }
     },
     ...dynamicButtons

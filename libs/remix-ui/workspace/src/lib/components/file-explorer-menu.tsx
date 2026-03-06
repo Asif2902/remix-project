@@ -620,6 +620,22 @@ export const FileExplorerMenu = (props: FileExplorerMenuProps) => {
                   </>
                 )}
               </Button>
+              <Button
+                variant="primary"
+                className="w-100 mb-1 d-flex flex-row align-items-center justify-content-center"
+                data-id="fileExplorerViewDappButton"
+                onClick={async () => {
+                  try {
+                    await global.plugin.call('tabs', 'focus', 'quick-dapp-v2')
+                    await global.plugin.call('quick-dapp-v2', 'openDapp', global.fs.browser.currentWorkspace)
+                  } catch (e) {
+                    console.warn('[FileExplorerMenu] Could not open DApp detail:', e)
+                  }
+                }}
+              >
+                <i className="fas fa-eye me-2"></i>
+                <span>View DApp</span>
+              </Button>
             </span>
           )}
 
@@ -669,7 +685,7 @@ export const FileExplorerMenu = (props: FileExplorerMenuProps) => {
                           </strong>
                           <br/>
                           <small style={{ color: selectedDappIndex === index ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}>
-                            Network: {mapping.chainId || 'Unknown'}<br/>
+                            Network: {mapping.chainId?.startsWith('vm-') ? 'Remix VM' : mapping.chainId || 'Unknown'}<br/>
                             Address: {mapping.address.substring(0, 15)}...
                           </small>
                         </div>

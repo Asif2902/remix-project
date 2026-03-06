@@ -120,6 +120,7 @@ export class FileReplacerHandler extends BaseToolHandler {
 
   async execute(args: FileReplacerArgs, plugin: Plugin): Promise<IMCPToolResult> {
     try {
+      console.log(`[FileReplacerHandler] - Replacing content in file: ${args.path} using regex: ${args.regEx}`);
       const exists = await plugin.call('fileManager', 'exists', args.path)
       if (!exists) {
         return this.createErrorResult(`File not found: ${args.path}`);
@@ -207,7 +208,7 @@ export class FileWriteHandler extends BaseToolHandler {
       } catch (openError) {
         console.warn(`Failed to open file in editor: ${openError.message}`);
       }
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 300))
 
       // make sure the LLM has actually updated the content if that is intended.
       const currentContent = await plugin.call('fileManager', 'readFile', args.path)
@@ -293,7 +294,7 @@ export class FileCreateHandler extends BaseToolHandler {
       } else {
         await plugin.call('fileManager', 'writeFile', args.path, '');
         await plugin.call('fileManager', 'open', args.path)
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 300))
 
         const cleanContent = typeof args.content === 'string' ? args.content : String(args.content || '')
         await plugin.call('editor', 'showCustomDiff', args.path, cleanContent)
@@ -413,7 +414,7 @@ export class FileMoveHandler extends BaseToolHandler {
         return this.createErrorResult(`Destination path already exists: ${args.to}`);
       }
 
-      await await plugin.call('fileManager', 'rename', args.from, args.to);
+      await plugin.call('fileManager', 'rename', args.from, args.to);
 
       const result: FileOperationResult = {
         success: true,

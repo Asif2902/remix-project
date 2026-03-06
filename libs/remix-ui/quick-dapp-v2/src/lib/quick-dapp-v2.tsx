@@ -53,7 +53,7 @@ export function RemixUiQuickDappV2({ plugin }: RemixUiQuickDappV2Props): JSX.Ele
   const dappManager = useMemo(() => new DappManager(plugin as any), [plugin]);
   const dappManagerRef = useRef(dappManager);
 
-  // Check dapp:quickdapp permission on mount
+  // Check dapp:quickdapp permission on mount and when auth state changes
   useEffect(() => {
     const checkAccess = async () => {
       try {
@@ -89,7 +89,21 @@ export function RemixUiQuickDappV2({ plugin }: RemixUiQuickDappV2Props): JSX.Ele
     };
 
     checkAccess();
-  }, []);
+
+    // Re-check permissions when login/logout occurs
+    const onAuthChanged = () => { checkAccess(); };
+    try {
+      plugin.on('auth' as any, 'authStateChanged', onAuthChanged);
+    } catch (e) {
+      console.warn('[QuickDapp] Could not listen for authStateChanged:', e);
+    }
+
+    return () => {
+      try {
+        (plugin as any).off('auth', 'authStateChanged', onAuthChanged);
+      } catch (_) {}
+    };
+  }, [plugin]);
 
   useEffect(() => {
     dappsRef.current = appState.dapps;
@@ -343,7 +357,24 @@ export function RemixUiQuickDappV2({ plugin }: RemixUiQuickDappV2Props): JSX.Ele
         dispatch({ type: 'SET_DAPPS', payload: refreshedDapps });
 
         if (refreshedDapps.length > 0) {
-          dispatch({ type: 'SET_VIEW', payload: 'dashboard' });
+          // Check if current workspace matches a DApp workspace
+          let autoOpenedDapp = false;
+          try {
+            const currentWs = await plugin.call('filePanel', 'getCurrentWorkspace');
+            if (currentWs?.name) {
+              const matchingDapp = refreshedDapps.find((d: any) => d.workspaceName === currentWs.name);
+              if (matchingDapp) {
+                dispatch({ type: 'SET_ACTIVE_DAPP', payload: matchingDapp });
+                dispatch({ type: 'SET_VIEW', payload: 'editor' });
+                autoOpenedDapp = true;
+              }
+            }
+          } catch (e) {
+            console.warn('[QuickDapp] Could not detect current workspace for auto-open:', e);
+          }
+          if (!autoOpenedDapp) {
+            dispatch({ type: 'SET_VIEW', payload: 'dashboard' });
+          }
         } else {
           dispatch({ type: 'SET_VIEW', payload: 'create' });
         }
